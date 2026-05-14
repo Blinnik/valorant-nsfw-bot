@@ -5,6 +5,12 @@ import xml.etree.ElementTree as ET
 
 WEBHOOK = os.getenv("WEBHOOK_URL")
 
+if not WEBHOOK:
+    print("WEBHOOK_URL not set")
+    exit()
+
+# -------- TAGS --------
+
 BASE_TAGS = [
     "valorant",
     "valorant_(series)"
@@ -42,17 +48,15 @@ NSFW_TAGS = [
     "anal"
 ]
 
-# -------- TAG GENERATION --------
-
 base = random.choice(BASE_TAGS)
 rating = random.choice(RATINGS)
 extra = random.sample(NSFW_TAGS, 3)
 
 tag = f"{base} {rating} {' '.join(extra)}"
 
-print(f"Searching tags: {tag}")
+print("Searching tags:", tag)
 
-# -------- GELBOORU XML API --------
+# -------- API REQUEST --------
 
 url = (
     "https://gelbooru.com/index.php"
@@ -97,24 +101,20 @@ if os.path.exists("posted.txt"):
 
 random.shuffle(posts)
 
-new_post = None
-
 # -------- FIND VALID POST --------
+
+new_post = None
 
 for post in posts:
     post_id = post.get("id")
     image_url = post.get("file_url", "")
 
-    if not post_id:
+    if not post_id or not image_url:
         continue
 
     if post_id in posted:
         continue
 
-    if not image_url:
-        continue
-
-    # только картинки
     if not image_url.endswith((".jpg", ".jpeg", ".png", ".gif")):
         continue
 
