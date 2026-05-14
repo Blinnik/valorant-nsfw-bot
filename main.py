@@ -1,7 +1,7 @@
 import requests
 import random
 import os
-import xml.etree.ElementTree as ET
+import time
 
 WEBHOOK = os.getenv("WEBHOOK_URL")
 
@@ -13,7 +13,6 @@ if not WEBHOOK:
 
 BASE_TAGS = [
     "valorant",
-    "valorant_(series)"
 ]
 
 RATINGS = [
@@ -50,64 +49,39 @@ NSFW_TAGS = [
 
 base = random.choice(BASE_TAGS)
 rating = random.choice(RATINGS)
-extra = random.sample(NSFW_TAGS, 3)
+extra = random.sample(NSFW_TAGS, 2)
 
 tag = f"{base} {rating} {' '.join(extra)}"
 
 print("Searching tags:", tag)
 
-# -------- URL --------
+# -------- DANBOORU API --------
 
-url = (
-    "https://gelbooru.com/index.php"
-    "?page=dapi&s=post&q=index"
-    "&limit=100"
-    f"&tags={tag}"
-)
+url = "https://danbooru.donmai.us/posts.json"
 
-# -------- FIXED HEADERS (anti-401) --------
+params = {
+    "tags": tag,
+    "limit": 50,
+    "random": True
+}
 
 headers = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/122.0.0.0 Safari/537.36"
-    ),
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "en-US,en;q=0.9",
-    "Connection": "keep-alive",
-    "Referer": "https://gelbooru.com/"
+    "User-Agent": "Mozilla/5.0"
 }
 
-# иногда помогает cookie bypass
-cookies = {
-    "fringeBenefits": "1"
-}
-
-# -------- REQUEST --------
-
-response = requests.get(
-    url,
-    headers=headers,
-    cookies=cookies,
-    timeout=30
-)
+response = requests.get(url, params=params, headers=headers, timeout=30)
 
 if response.status_code != 200:
     print("HTTP ERROR:", response.status_code)
     print(response.text[:300])
     exit()
 
-# -------- XML PARSE --------
-
 try:
-    root = ET.fromstring(response.text)
+    posts = response.json()
 except Exception as e:
-    print("XML parse error:", e)
+    print("JSON parse error:", e)
     print(response.text[:300])
     exit()
-
-posts = root.findall("post")
 
 if not posts:
     print("No posts found")
@@ -128,8 +102,8 @@ random.shuffle(posts)
 new_post = None
 
 for post in posts:
-    post_id = post.get("id")
-    image_url = post.get("file_url", "")
+    post_id = str(post.get("id"))
+    image_url = post.get("file_url")
 
     if not post_id or not image_url:
         continue
@@ -137,6 +111,7 @@ for post in posts:
     if post_id in posted:
         continue
 
+    # only images
     if not image_url.endswith((".jpg", ".jpeg", ".png", ".gif")):
         continue
 
@@ -147,8 +122,8 @@ if not new_post:
     print("No suitable post found")
     exit()
 
-image_url = new_post.get("file_url")
-post_id = new_post.get("id")
+image_url = new_post["file_url"]
+post_id = str(new_post["id"])
 
 # -------- DISCORD --------
 
@@ -157,7 +132,9 @@ payload = {
         {
             "title": "Valorant NSFW",
             "description": f"Tags: {tag}",
-            "image": {"url": image_url}
+            "image": {
+                "url": image_url
+            }
         }
     ]
 }
