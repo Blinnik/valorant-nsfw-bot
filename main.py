@@ -39,7 +39,7 @@ NSFW_TAGS = [
 
 base = random.choice(BASE_TAGS)
 rating = random.choice(RATINGS)
-extra = random.sample(NSFW_TAGS, 2)
+extra = random.sample(NSFW_TAGS, 1)
 
 tag = f"{base} {rating} {' '.join(extra)}"
 
