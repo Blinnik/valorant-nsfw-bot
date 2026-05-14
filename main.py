@@ -1,7 +1,7 @@
 import requests
 import random
 import os
-import json
+import xml.etree.ElementTree as ET
 
 WEBHOOK = os.getenv("WEBHOOK_URL")
 
@@ -29,45 +29,66 @@ NSFW_TAGS = [
     "leotard",
     "cameltoe",
     "topless",
-    "nude"
+    "nude",
+    "boobs",
+    "vagina",
+    "tits",
+    "titties",
+    "vagina",
+    "pussy",
+    "cum",
+    "sex",
+    "ass",
+    "anal"
 ]
 
+# -------- TAG GENERATION --------
+
 base = random.choice(BASE_TAGS)
-
 rating = random.choice(RATINGS)
-
 extra = random.sample(NSFW_TAGS, 3)
 
 tag = f"{base} {rating} {' '.join(extra)}"
 
 print(f"Searching tags: {tag}")
 
-# Gelbooru API
+# -------- GELBOORU XML API --------
+
 url = (
     "https://gelbooru.com/index.php"
-    "?page=dapi"
-    "&s=post"
-    "&q=index"
-    "&json=1"
+    "?page=dapi&s=post&q=index"
     "&limit=100"
     f"&tags={tag}"
 )
 
-response = requests.get(url, timeout=30)
+headers = {
+    "User-Agent": "Mozilla/5.0"
+}
 
-try:
-    data = response.json()
-except json.JSONDecodeError:
-    print("Failed to parse JSON")
+response = requests.get(url, headers=headers, timeout=30)
+
+if response.status_code != 200:
+    print("HTTP ERROR:", response.status_code)
+    print(response.text[:300])
     exit()
 
-if "post" not in data:
+# -------- XML PARSE --------
+
+try:
+    root = ET.fromstring(response.text)
+except Exception as e:
+    print("XML parse error:", e)
+    print(response.text[:300])
+    exit()
+
+posts = root.findall("post")
+
+if not posts:
     print("No posts found")
     exit()
 
-posts = data["post"]
+# -------- LOAD POSTED IDS --------
 
-# Загружаем список уже опубликованных постов
 posted = set()
 
 if os.path.exists("posted.txt"):
@@ -78,21 +99,23 @@ random.shuffle(posts)
 
 new_post = None
 
-for post in posts:
+# -------- FIND VALID POST --------
 
-    post_id = str(post.get("id"))
+for post in posts:
+    post_id = post.get("id")
+    image_url = post.get("file_url", "")
+
+    if not post_id:
+        continue
 
     if post_id in posted:
         continue
 
-    image_url = post.get("file_url", "")
-
-    # Только картинки
-    if not image_url.endswith((".jpg", ".jpeg", ".png", ".gif")):
+    if not image_url:
         continue
 
-    # Иногда API отдаёт мусор
-    if "video" in image_url:
+    # только картинки
+    if not image_url.endswith((".jpg", ".jpeg", ".png", ".gif")):
         continue
 
     new_post = post
@@ -102,9 +125,11 @@ if not new_post:
     print("No suitable new post found")
     exit()
 
-image_url = new_post["file_url"]
+image_url = new_post.get("file_url")
+post_id = new_post.get("id")
 
-# Discord Embed
+# -------- DISCORD PAYLOAD --------
+
 payload = {
     "embeds": [
         {
@@ -117,16 +142,16 @@ payload = {
     ]
 }
 
-response = requests.post(WEBHOOK, json=payload, timeout=30)
+resp = requests.post(WEBHOOK, json=payload, timeout=30)
 
-if response.status_code not in [200, 204]:
-    print("Failed to send to Discord")
-    print(response.text)
+if resp.status_code not in [200, 204]:
+    print("Discord error:", resp.text)
     exit()
 
-# Сохраняем ID опубликованного поста
+# -------- SAVE ID --------
+
 with open("posted.txt", "a", encoding="utf-8") as f:
-    f.write(f"{new_post['id']}\n")
+    f.write(post_id + "\n")
 
 print("Posted successfully!")
 print(image_url)
