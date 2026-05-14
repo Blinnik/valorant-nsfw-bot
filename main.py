@@ -56,7 +56,7 @@ tag = f"{base} {rating} {' '.join(extra)}"
 
 print("Searching tags:", tag)
 
-# -------- API REQUEST --------
+# -------- URL --------
 
 url = (
     "https://gelbooru.com/index.php"
@@ -65,11 +65,33 @@ url = (
     f"&tags={tag}"
 )
 
+# -------- FIXED HEADERS (anti-401) --------
+
 headers = {
-    "User-Agent": "Mozilla/5.0"
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/122.0.0.0 Safari/537.36"
+    ),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Connection": "keep-alive",
+    "Referer": "https://gelbooru.com/"
 }
 
-response = requests.get(url, headers=headers, timeout=30)
+# иногда помогает cookie bypass
+cookies = {
+    "fringeBenefits": "1"
+}
+
+# -------- REQUEST --------
+
+response = requests.get(
+    url,
+    headers=headers,
+    cookies=cookies,
+    timeout=30
+)
 
 if response.status_code != 200:
     print("HTTP ERROR:", response.status_code)
@@ -91,7 +113,7 @@ if not posts:
     print("No posts found")
     exit()
 
-# -------- LOAD POSTED IDS --------
+# -------- LOAD POSTED --------
 
 posted = set()
 
@@ -101,7 +123,7 @@ if os.path.exists("posted.txt"):
 
 random.shuffle(posts)
 
-# -------- FIND VALID POST --------
+# -------- PICK POST --------
 
 new_post = None
 
@@ -122,22 +144,20 @@ for post in posts:
     break
 
 if not new_post:
-    print("No suitable new post found")
+    print("No suitable post found")
     exit()
 
 image_url = new_post.get("file_url")
 post_id = new_post.get("id")
 
-# -------- DISCORD PAYLOAD --------
+# -------- DISCORD --------
 
 payload = {
     "embeds": [
         {
             "title": "Valorant NSFW",
             "description": f"Tags: {tag}",
-            "image": {
-                "url": image_url
-            }
+            "image": {"url": image_url}
         }
     ]
 }
@@ -148,7 +168,7 @@ if resp.status_code not in [200, 204]:
     print("Discord error:", resp.text)
     exit()
 
-# -------- SAVE ID --------
+# -------- SAVE --------
 
 with open("posted.txt", "a", encoding="utf-8") as f:
     f.write(post_id + "\n")
