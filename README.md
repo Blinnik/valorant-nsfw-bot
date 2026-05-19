@@ -82,6 +82,7 @@ If you use an API proxy:
 ---
 
 Copy Worker URL:
+
 https://your-worker.workers.dev/?tags=valorant
 
 🔐 Step 3: Configure GitHub Secrets
@@ -93,30 +94,37 @@ GitHub → Repository → Settings → Secrets and variables → Actions
 Add:
 
 Name	       | Description
+
 WEBHOOK_URL	 | Discord webhook URL
+
 WORKER_URL	 | API endpoint (Cloudflare Worker or direct API)
 
 ---
 
 🚀 Step 4: Enable GitHub Actions
+
 Open repository
+
 Go to Actions tab
+
 Enable workflows if prompted
 
 ---
 
 ▶️ Step 5: Run the Bot
+
 Manual Run:
-Go to Actions
-Select workflow
-Click Run workflow
-Automatic Run:
+1. Go to Actions
+2. Select workflow
+3. Click Run workflow
+4. Automatic Run:
 
 Configured in workflow:
-
+```
 on:
   schedule:
     - cron: "0 */2 * * *"
+```
 
 (This runs every 2 hours)
 
@@ -129,8 +137,11 @@ The bot prevents duplicates using:
 posted.txt
 
 Example:
+
 123456
+
 789012
+
 345678
 
 Each line represents a previously posted content ID.
