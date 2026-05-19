@@ -92,13 +92,11 @@ Go to:
 GitHub → Repository → Settings → Secrets and variables → Actions
 
 Add:
-
+```
 Name	       | Description
-
 WEBHOOK_URL	 | Discord webhook URL
-
 WORKER_URL	 | API endpoint (Cloudflare Worker or direct API)
-
+```
 ---
 
 🚀 Step 4: Enable GitHub Actions
@@ -132,9 +130,7 @@ on:
 
 🧾 Step 6: State Persistence
 
-The bot prevents duplicates using:
-
-posted.txt
+The bot prevents duplicates using posted.txt
 
 Example:
 
