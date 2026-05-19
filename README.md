@@ -31,6 +31,7 @@ It fetches images from an API (optionally via Cloudflare Worker), filters duplic
 ---
 
 # 📦 Project Structure
+```
 .
 ├── main.py # Main bot engine
 ├── posted.txt # List of already posted IDs
@@ -39,7 +40,7 @@ It fetches images from an API (optionally via Cloudflare Worker), filters duplic
 └── .github/
 └── workflows/
 └── post.yml # GitHub Actions workflow
-
+```
 ---
 
 # ⚙️ Requirements
@@ -93,9 +94,11 @@ GitHub → Repository → Settings → Secrets and variables → Actions
 
 Add:
 ```
+
 Name	       | Description
 WEBHOOK_URL	 | Discord webhook URL
 WORKER_URL	 | API endpoint (Cloudflare Worker or direct API)
+
 ```
 ---
 
