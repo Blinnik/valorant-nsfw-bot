@@ -1,8 +1,8 @@
-name: Discord NSFW Bot
+name: Valorant NSFW Bot
 
 on:
   schedule:
-    - cron: "0 */12 * * *"
+    - cron: "0 */2 * * *"
   workflow_dispatch:
 
 permissions:
@@ -13,15 +13,31 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - run: pip install requests
+      - name: Install requests
+        run: pip install requests
 
-      - run: python main.py
+      - name: Run bot
         env:
           WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
           WORKER_URL: ${{ secrets.WORKER_URL }}
+        run: python main.py
+
+      - name: Commit state files
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+
+          git add posted.txt
+          git add engine_memory.json
+
+          git commit -m "update bot state" || echo "nothing to commit"
+
+          git push
