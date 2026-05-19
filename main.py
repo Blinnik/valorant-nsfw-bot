@@ -159,7 +159,7 @@ save_json(MEM_FILE, memory)
 payload = {
     "embeds": [
         {
-            "title": "Valorant NSFW v2 PRO Engine",
+            "title": "Valorant NSFW",
             "description": f"Post ID: {post_id}",
             "image": {"url": image_url}
         }
