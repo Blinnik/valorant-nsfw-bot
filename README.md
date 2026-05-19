@@ -86,7 +86,7 @@ Copy Worker URL:
 
 https://your-worker.workers.dev/?tags=valorant
 
-🔐 Step 3: Configure GitHub Secrets
+# 🔐 Step 3: Configure GitHub Secrets
 
 Go to:
 
@@ -102,7 +102,7 @@ WORKER_URL	 | API endpoint (Cloudflare Worker or direct API)
 ```
 ---
 
-🚀 Step 4: Enable GitHub Actions
+# 🚀 Step 4: Enable GitHub Actions
 
 Open repository
 
@@ -112,7 +112,7 @@ Enable workflows if prompted
 
 ---
 
-▶️ Step 5: Run the Bot
+# ▶️ Step 5: Run the Bot
 
 Manual Run:
 1. Go to Actions
@@ -131,7 +131,7 @@ on:
 
 ---
 
-🧾 Step 6: State Persistence
+# 🧾 Step 6: State Persistence
 
 The bot prevents duplicates using posted.txt
 
