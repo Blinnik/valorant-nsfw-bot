@@ -27,7 +27,10 @@ jobs:
       - name: Run bot
         env:
           WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
-          WORKER_URL: ${{ secrets.WORKER_URL }}
+          R34_API_KEY: ${{ secrets.R34_API_KEY }}
+          R34_USER_ID: ${{ secrets.R34_USER_ID }}
+          GEL_API_KEY: ${{ secrets.GEL_API_KEY }}
+          GEL_USER_ID: ${{ secrets.GEL_USER_ID }}
         run: python main.py
 
       - name: Commit state files
