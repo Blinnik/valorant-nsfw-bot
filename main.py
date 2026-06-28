@@ -129,20 +129,31 @@ BAD_TAGS = {
     "comic_page", "multiple_views",
 }
 
-MAX_ASPECT = 2.4   # reject anything taller/wider than this ratio
+# Only still images embed in Discord; .mp4/.webm/etc. render as a blank post.
+IMAGE_EXTS = (".jpg", ".jpeg", ".png", ".gif", ".webp")
+
+MAX_TALL = 2.2   # reject portrait pages taller than this (h/w) -> comics
+MAX_WIDE = 4.0   # reject only extreme panoramas (w/h); normal wide is fine
 
 
 def is_explicit(rating):
     return rating in ("e", "explicit")
 
 
+def is_image(url):
+    return url.split("?", 1)[0].lower().endswith(IMAGE_EXTS)
+
+
 def valid(post):
     if not is_explicit(post["rating"]):
         return False
+    if not is_image(post["url"]):          # skip videos -> won't embed
+        return False
     w, h = post["w"], post["h"]
     if w and h:
-        ratio = max(w, h) / min(w, h)
-        if ratio > MAX_ASPECT:
+        if h / w > MAX_TALL:               # too tall -> likely a comic page
+            return False
+        if w / h > MAX_WIDE:               # extreme panorama
             return False
     if set(post["tags"].split()) & BAD_TAGS:
         return False
@@ -176,9 +187,10 @@ def normalize(src, raw):
     return out
 
 
-def fetch(src, tags):
+def fetch(src, tags, pid=0):
     params = dict(src["params"])
     params["tags"] = tags
+    params["pid"] = str(pid)             # page offset -> reach deeper results
     try:
         r = requests.get(
             src["url"],
@@ -209,6 +221,7 @@ def pick_unseen(src, batch):
 # -------- ENGINE LOOP --------
 
 TRIES_PER_SOURCE = 6
+PAGE_SPREAD = 6        # randomly dip into pages 0..N so we don't exhaust the top
 
 post = None
 chosen_src = None
@@ -217,9 +230,10 @@ chosen_tags = None
 for src in SOURCES:
     for attempt in range(TRIES_PER_SOURCE):
         tags = build_tags(src)
-        print(f"[{src['name']}] try {attempt + 1}: {tags}")
+        pid = random.randint(0, PAGE_SPREAD)
+        print(f"[{src['name']}] try {attempt + 1}: {tags} (page {pid})")
 
-        candidate = pick_unseen(src, fetch(src, tags))
+        candidate = pick_unseen(src, fetch(src, tags, pid))
         if candidate:
             post, chosen_src, chosen_tags = candidate, src, tags
             break
